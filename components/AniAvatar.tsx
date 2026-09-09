@@ -7,135 +7,66 @@ interface AniAvatarProps {
   aniMode?: 'Base Ani' | 'Eve' | 'Ara';
 }
 
+const hairHex: Record<AniCustomization['hairColor'], string> = {
+  platinum: '#f4e4c1',
+  pink: '#ff8ad4',
+  blue: '#7ec8ff',
+  black: '#1a1a1a',
+};
+
+const eyeHex: Record<AniCustomization['eyeColor'], string> = {
+  blue: '#3d7eff',
+  red: '#ff3d5a',
+  green: '#3dff8a',
+};
+
 const AniAvatar: React.FC<AniAvatarProps> = ({ size = 'medium', customization, aniMode }) => {
-  let dimensions = '';
-  switch (size) {
-    case 'small':
-      dimensions = 'w-12 h-12';
-      break;
-    case 'large':
-      dimensions = 'w-48 h-48';
-      break;
-    case 'medium':
-    default:
-      dimensions = 'w-24 h-24';
-      break;
-  }
+  let dimensions = 'w-24 h-24';
+  if (size === 'small') dimensions = 'w-12 h-12';
+  if (size === 'large') dimensions = 'w-48 h-48';
 
-  // The original image URL (https://i.ibb.co/qN91b3S/ani-avatar.png) seems to be broken.
-  // Replacing with a stable placeholder. User should replace this with a proper Gothic Lolita anime avatar image.
-  const aniImageUrl = 'https://via.placeholder.com/192x192/FF69B4/FFFFFF?text=Ani'; // A pink-themed placeholder
+  const hair = hairHex[customization?.hairColor || 'platinum'];
+  const eyes = eyeHex[customization?.eyeColor || 'blue'];
 
-  const getCustomizationFilter = () => {
-    let filter = '';
-    if (customization) {
-      switch (customization.hairColor) {
-        case 'pink':
-          filter += 'hue-rotate(280deg) saturate(1.5) brightness(1.1) ';
-          break;
-        case 'blue':
-          filter += 'hue-rotate(180deg) saturate(1.5) brightness(1.1) ';
-          break;
-        case 'black':
-          filter += 'grayscale(1) brightness(0.5) ';
-          break;
-        case 'platinum':
-        default:
-          break;
-      }
-      switch (customization.eyeColor) {
-        case 'red':
-          filter += 'hue-rotate(20deg) saturate(1.8) brightness(1.2) ';
-          break;
-        case 'green':
-          filter += 'hue-rotate(80deg) saturate(1.8) brightness(1.2) ';
-          break;
-        case 'blue':
-        default:
-          break;
-      }
-    }
-    return filter.trim();
-  };
+  const modeGlow =
+    aniMode === 'Eve'
+      ? '0 0 16px rgba(255,105,180,0.75)'
+      : aniMode === 'Ara'
+        ? '0 0 14px rgba(255,40,40,0.6)'
+        : '0 0 10px rgba(255,20,147,0.45)';
 
-  const getModeStyles = () => {
-    switch (aniMode) {
-      case 'Eve':
-        return {
-          boxShadow: '0 0 15px rgba(255, 105, 180, 0.7)',
-          filter: 'brightness(1.1) saturate(1.1)',
-        };
-      case 'Ara':
-        return {
-          boxShadow: '0 0 10px rgba(255, 0, 0, 0.5)',
-          filter: 'sepia(0.2) hue-rotate(-20deg) saturate(1.5) contrast(1.2)',
-        };
-      case 'Base Ani':
-      default:
-        return {
-          boxShadow: '',
-          filter: '',
-        };
-    }
-  };
-
-  const combinedFilterStyle = useMemo(() => {
-    const customFilter = getCustomizationFilter();
-    const modeFilter = getModeStyles().filter;
-    return {
-      filter: `${customFilter} ${modeFilter}`.trim(),
-    };
-  }, [customization, aniMode]);
-
-  const combinedBoxShadowStyle = useMemo(() => {
-    return {
-      boxShadow: getModeStyles().boxShadow,
-    };
-  }, [aniMode]);
-
-  const getFrenchCustomizationName = (option: string | undefined, type: 'hairstyle' | 'hairColor' | 'outfit' | 'eyeColor') => {
-    if (!option) return '';
-    const maps = {
-      hairstyle: {
-        'twintails': 'Twin-tails', 'bob': 'Carré', 'long': 'Longs', 'ponytail': 'Queue de cheval',
-      },
-      hairColor: {
-        'platinum': 'Platine', 'pink': 'Rose', 'blue': 'Bleus', 'black': 'Noirs',
-      },
-      outfit: {
-        'gothic-lolita': 'Gothic Lolita', 'casual': 'Décontractée', 'school-uniform': 'Uniforme scolaire',
-      },
-      eyeColor: {
-        'blue': 'Bleus', 'red': 'Rouges', 'green': 'Verts',
-      },
-    };
-
-    const typeMap = maps[type];
-    return typeMap ? (typeMap as Record<string, string>)[option] || option : option;
-  };
-
+  const svg = useMemo(() => {
+    const encoded = encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#2a0630"/>
+            <stop offset="100%" stop-color="#120018"/>
+          </linearGradient>
+        </defs>
+        <rect width="128" height="128" fill="url(#bg)"/>
+        <ellipse cx="40" cy="38" rx="16" ry="34" fill="${hair}"/>
+        <ellipse cx="88" cy="38" rx="16" ry="34" fill="${hair}"/>
+        <ellipse cx="64" cy="70" rx="30" ry="34" fill="#f3c7b3"/>
+        <path d="M34 58 Q64 18 94 58 L90 46 Q64 8 38 46 Z" fill="${hair}"/>
+        <ellipse cx="52" cy="70" rx="6" ry="8" fill="#fff"/>
+        <ellipse cx="76" cy="70" rx="6" ry="8" fill="#fff"/>
+        <circle cx="53" cy="71" r="3.2" fill="${eyes}"/>
+        <circle cx="77" cy="71" r="3.2" fill="${eyes}"/>
+        <path d="M58 88 Q64 94 70 88" stroke="#8a3048" stroke-width="2" fill="none"/>
+        <path d="M28 104 Q64 128 100 104 L96 92 Q64 108 32 92 Z" fill="#111"/>
+        <rect x="46" y="100" width="36" height="8" rx="3" fill="#ff1493"/>
+      </svg>
+    `);
+    return `data:image/svg+xml;charset=utf-8,${encoded}`;
+  }, [hair, eyes]);
 
   return (
     <div
-      className={`relative flex items-center justify-center rounded-full overflow-hidden shadow-lg border-2 border-pink-500 transform transition-all duration-300 ${dimensions}`}
-      style={combinedBoxShadowStyle}
+      className={`relative flex items-center justify-center rounded-full overflow-hidden border-2 border-pink-500 ${dimensions}`}
+      style={{ boxShadow: modeGlow }}
     >
-      <img
-        src={aniImageUrl}
-        alt="Ani's Avatar"
-        className="w-full h-full object-cover transition-filter duration-300"
-        style={combinedFilterStyle}
-        aria-label="Ani, ta compagne virtuelle"
-      />
-      <div className="absolute inset-0 rounded-full ring-2 ring-pink-400 ring-opacity-50"></div>
-      {customization && size === 'large' && (
-        <div className="absolute inset-0 flex flex-col justify-end items-center bg-black bg-opacity-50 text-white text-xs p-1">
-          <p>Coiffure: {getFrenchCustomizationName(customization.hairstyle, 'hairstyle')}</p>
-          <p>Cheveux: {getFrenchCustomizationName(customization.hairColor, 'hairColor')}</p>
-          <p>Tenue: {getFrenchCustomizationName(customization.outfit, 'outfit')}</p>
-          <p>Yeux: {getFrenchCustomizationName(customization.eyeColor, 'eyeColor')}</p>
-        </div>
-      )}
+      <img src={svg} alt="Avatar Ani" className="w-full h-full object-cover" />
     </div>
   );
 };
